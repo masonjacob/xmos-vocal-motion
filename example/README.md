@@ -1,0 +1,1 @@
+The example code was taken from [here] (https://www.makerguides.com/tb6560-stepper-motor-driver-arduino-tutorial/)
