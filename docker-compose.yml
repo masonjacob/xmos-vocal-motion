@@ -5,10 +5,8 @@ services:
     volumes:
       - src:/src
       - shared_data:/shared
-    environment:
     stdin_open: true
     tty: true
-
   gtkwave:
     image: hdlc/gtkwave
     volumes:
