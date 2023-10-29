@@ -1,0 +1,26 @@
+version: '3'
+services:
+  xmos-dev:
+    image: masonjacob/xmos-dev
+    volumes:
+      - src:/src
+      - shared_data:/shared
+    environment:
+    stdin_open: true
+    tty: true
+
+  gtkwave:
+    image: hdlc/gtkwave
+    volumes:
+      - /run/desktop/mnt/host/wslg/.X11-unix:/tmp/.X11-unix
+      - /run/desktop/mnt/host/wslg:/mnt/wslg
+      - shared_data:/shared
+    environment:
+      - DISPLAY=:0
+      - WAYLAND_DISPLAY=wayland-0
+      - XDG_RUNTIME_DIR=/mnt/wslg/runtime-dir
+      - PULSE_SERVER=/mnt/wslg/PulseServer
+
+volumes:
+  src:
+  shared_data:
