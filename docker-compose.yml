@@ -3,7 +3,7 @@ services:
   xmos-dev:
     image: masonjacob/xmos-dev
     volumes:
-      - src:/src
+      - ./src:/src
       - shared_data:/shared
     stdin_open: true
     tty: true
@@ -20,5 +20,4 @@ services:
       - PULSE_SERVER=/mnt/wslg/PulseServer
 
 volumes:
-  src:
   shared_data:
