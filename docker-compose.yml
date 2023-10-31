@@ -1,10 +1,13 @@
 version: '3'
 services:
   xmos-dev:
-    image: masonjacob/xmos-dev
+    image: masonjacob/xmos-dev:latest
+    # image: ghcr.io/xmos/xcore_builder:v3
     volumes:
-      - src:/src
-      - shared_data:/shared
+      - ./src:/home/src
+      - shared_data:/home/shared
+      # bind mount to pass USB devices
+      - /dev/bus/usb:/dev/bus/usb
     stdin_open: true
     tty: true
   gtkwave:
@@ -12,7 +15,7 @@ services:
     volumes:
       - /run/desktop/mnt/host/wslg/.X11-unix:/tmp/.X11-unix
       - /run/desktop/mnt/host/wslg:/mnt/wslg
-      - shared_data:/shared
+      - shared_data:/home/shared
     environment:
       - DISPLAY=:0
       - WAYLAND_DISPLAY=wayland-0
@@ -20,5 +23,4 @@ services:
       - PULSE_SERVER=/mnt/wslg/PulseServer
 
 volumes:
-  src:
   shared_data:
