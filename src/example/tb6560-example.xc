@@ -33,7 +33,7 @@ out port step_port = on tile[0]: XS1_PORT_1D; // X0D11
 #define stepsPerRevolution 400
 
 int main (void) {
-
+while(1){
 // Set spinning direction clockwise
 direction_port <: 1;
 
@@ -46,5 +46,8 @@ direction_port <: 1;
   delay_microseconds(2000);
   }
 
+  delay_milliseconds(10000);
+
   return 0;
+  }
 }
