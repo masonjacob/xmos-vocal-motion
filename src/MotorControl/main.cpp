@@ -3,50 +3,71 @@
 #include <cmath>  // Include the cmath library to use sqrt
 #include <ostream>
 #include <cstdlib> // Required for system()
+#include <type_traits>  
 #include "KinematicPoint.h"
 
 //global variables
-const int minJ2angle = -90;
-const int maxJ2angle = 90;
-const int L2length = 1;
-const int minJ3angle = -90;
-const int maxJ3angle = 90;
-const int L3length = 1;
-const int minJ4angle = -90;
-const int maxJ4angle = 90;
-const int L4length = 1;
-const int J2step = 1;
-const int J3step = 1;
-const int J4step = 1;
+const int minS1angle = 0;
+const int maxS1angle = 90;
 
-//Weights for generating the nexxt set of angles. We generally want J2 to move as little as possible, so we make its weight bigger
-//than the other weights. This way it contributes more towards our dist function later which will make movement of J2 more costly than
-//movement of J3 or J4
-double J2stepweight = 1;
-double J3stepweight = 0.5;
-double J4stepweight = 0.1;
+const int minJ1angle = -40;
+const int maxJ1angle = 40;
+const int L1length = 1;
+
+const int minJ2angle = -40;
+const int maxJ2angle = 40;
+const int L2length = 1;
+
+const int minJ3angle = -40;
+const int maxJ3angle = 40;
+const int L3length = 1;
+
+const int minS3angle = 0;
+const int maxS3angle = 90;
+
+const int S1step = 5;
+const int J1step = 10;
+const int J2step = 10;
+const int J3step = 10;
+const int S3step = 5;
+
+//Weights for generating the nexxt set of angles. We generally want J1 to move as little as possible, so we make its weight bigger
+//than the other weights. This way it contributes more towards our dist function later which will make movement of J1 more costly than
+//movement of J2 or J3
+double S1stepweight = 1;
+double J1stepweight = 1;
+double J2stepweight = 0.5;
+double J3stepweight = 0.1;
+double S3stepweight = 0.01;
 
 //Generate starting Kpoint for our initial position, which will be 0 for all the angles and (0,0) for the x, y positon
-KinematicPoint currentkpoint = KinematicPoint(0, 0, 0, 3, 0);
-double xsensitivity = 0.01;
-double ysensitivity = 0.01;
+KinematicPoint currentkpoint = KinematicPoint(0, 0, 0, 0, 0, 0, 0, 3);
+                                    //        S1,J1,J2,J3,S3  X, Y, Z
+double xsensitivity = 0.1;
+double ysensitivity = 0.1;
+double zsensitivity = 0.1;
 
-double maxX = L2length + L3length + L4length;
+double maxX = L1length + L2length + L3length;
 double maxY = maxX;
+double maxZ = maxX;
 double minX = 0;
 double minY = 0;
+double minZ = 0;
 
 double newx = 0;
 double newy = 0;
+double newz = 0;
 
 // Calculate the number of steps for each angle
+int S1numsteps = (maxS1angle - minS1angle)/ S1step + 1;
+int J1numsteps = (maxJ1angle - minJ1angle)/ J1step + 1;
 int J2numsteps = (maxJ2angle - minJ2angle)/ J2step + 1;
 int J3numsteps = (maxJ3angle - minJ3angle)/ J3step + 1;
-int J4numsteps = (maxJ3angle - minJ3angle)/ J4step + 1;
+int S3numsteps = (maxS3angle - minS3angle)/ S3step + 1;
 
-std::vector<std::vector<std::vector<KinematicPoint>>> kpointsXYplane;
+std::vector<std::vector<std::vector<std::vector<KinematicPoint>>>> kpointsXYZplane;
 
-KinematicPoint GenerateNewKPoint(const KinematicPoint& currentKPoint, double newx, double newy);
+KinematicPoint GenerateNewKPoint(const KinematicPoint& currentKPoint, double newx, double newy, double newz);
 
 
 // Define a constant for pi.
@@ -59,15 +80,17 @@ double degreesToRadians(double degrees) {
 
 //This method will take in ur current angle positions and your new (x,y) position and give us back the kpoint with angles that will get
 //us to our new (x,y) with the least amount of angle movement as possible
-KinematicPoint GenerateNewKPoint(const KinematicPoint& currentKPoint, double newx, double newy) 
+KinematicPoint GenerateNewKPoint(const KinematicPoint& currentKPoint, double newx, double newy, double newz) 
 {
     KinematicPoint mindistKPoint = KinematicPoint();
     bool validnewpoint = false;
 
     //Loop through our kpoints using our current kpoint and find the minimum distance angles to create our new (x,y). That will the new angles we set the motors to
-           int rowpos = std::round((newx + maxX)/xsensitivity);
-           int colpos = std::round((newy + maxY)/ysensitivity);
-            std::vector<KinematicPoint> pointstocheck = kpointsXYplane[rowpos][colpos];
+           int xpos = std::round((newx + maxX)/xsensitivity);
+           int ypos = std::round((newy + maxY)/ysensitivity);
+           int zpos = std::round((newz + maxZ)/zsensitivity);
+           std::cout << xpos << " " << ypos << " " << zpos << std::endl;
+            std::vector<KinematicPoint> pointstocheck = kpointsXYZplane[xpos][ypos][zpos];
             for (int k = 0; k < pointstocheck.size(); ++k) 
             {
                 
@@ -81,21 +104,26 @@ KinematicPoint GenerateNewKPoint(const KinematicPoint& currentKPoint, double new
                     mindistKPoint.setAngle1(kptocheck.getAngle1());
                     mindistKPoint.setAngle2(kptocheck.getAngle2());
                     mindistKPoint.setAngle3(kptocheck.getAngle3());
+                    mindistKPoint.setAngle4(kptocheck.getAngle4());
+                    mindistKPoint.setAngle5(kptocheck.getAngle5());
                     mindistKPoint.setX(newx);
                     mindistKPoint.setY(newy);
-                    mindist = J2stepweight*(fabs(kptocheck.getAngle1() - currentkpoint.getAngle1())) + J3stepweight*(fabs(kptocheck.getAngle2() - currentkpoint.getAngle2())) + J4stepweight*(fabs(kptocheck.getAngle3() - currentkpoint.getAngle3()));
+                    mindistKPoint.setZ(newz);
+                    mindist = S1stepweight*(fabs(kptocheck.getAngle1() - currentkpoint.getAngle1())) + J1stepweight*(fabs(kptocheck.getAngle2() - currentkpoint.getAngle2())) + J2stepweight*(fabs(kptocheck.getAngle3() - currentkpoint.getAngle3())) + J3stepweight*(fabs(kptocheck.getAngle4() - currentkpoint.getAngle4())) +S3stepweight*(fabs(kptocheck.getAngle5() - currentkpoint.getAngle5()));
                     validnewpoint = true;
                 }
                 else
                 {
                     //Peform distance calculations and check them against our current running mindistkpoint
-                    double tocheckdist = J2stepweight*(fabs(kptocheck.getAngle1() - currentkpoint.getAngle1())) + J3stepweight*(fabs(kptocheck.getAngle2() - currentkpoint.getAngle2())) + J4stepweight*(fabs(kptocheck.getAngle3() - currentkpoint.getAngle3()));
+                    double tocheckdist = S1stepweight*(fabs(kptocheck.getAngle1() - currentkpoint.getAngle1())) + J1stepweight*(fabs(kptocheck.getAngle2() - currentkpoint.getAngle2())) + J2stepweight*(fabs(kptocheck.getAngle3() - currentkpoint.getAngle3())) + J3stepweight*(fabs(kptocheck.getAngle4() - currentkpoint.getAngle4())) +S3stepweight*(fabs(kptocheck.getAngle5() - currentkpoint.getAngle5()));
                     if(tocheckdist < mindist)
                     {
                         mindist = tocheckdist; //Update our running mindist
-                        mindistKPoint.setAngle1(kptocheck.getAngle1()); //Update the mindistkpoint
+                        mindistKPoint.setAngle1(kptocheck.getAngle1()); //Update the mindistkpoint   
                         mindistKPoint.setAngle2(kptocheck.getAngle2());
                         mindistKPoint.setAngle3(kptocheck.getAngle3());
+                        mindistKPoint.setAngle4(kptocheck.getAngle4());
+                        mindistKPoint.setAngle5(kptocheck.getAngle5());
                     }
                     
                 
@@ -108,62 +136,32 @@ KinematicPoint GenerateNewKPoint(const KinematicPoint& currentKPoint, double new
     
 }
 
-/*
-//This method will take in ur current angle positions and your new (x,y) position and give us back the kpoint with angles that will get
-//us to our new (x,y) with the least amount of angle movement as possible
-KinematicPoint GenerateNewKPoint(const KinematicPoint& currentKPoint, double newx, double newy) 
-{
+// Forward declaration of the function template to calculate storage for any type
+template<typename T>
+size_t calculateStorage(const T& value);
 
-    KinematicPoint mindistKPoint = KinematicPoint();
-    bool validnewpoint = false;
-
-    //Loop through our kpoints using our current kpoint and find the minimum distance angles to create our new (x,y). That will the new angles we set the motors to
-    for (int i = 0; i < J2numsteps; ++i) {
-        for (int j = 0; j < J3numsteps; ++j) {
-            for (int k = 0; k < J4numsteps; ++k) {
-                
-                KinematicPoint kptocheck = kpointGrid[i][j][k];
-                double mindist;
-                
-                //Our generated x and y might be ever so slightly off so it makes sense to have some sensitivity
-                if(fabs(kptocheck.getX() -newx) < xsensitivity && fabs(kptocheck.getY() - newy) < ysensitivity)
-                {
-                    //For the very first min found. Also doubles for telling us if a point is achievable
-                    if(validnewpoint == false)
-                    {
-                        mindistKPoint.setAngle1(kptocheck.getAngle1());
-                        mindistKPoint.setAngle2(kptocheck.getAngle2());
-                        mindistKPoint.setAngle3(kptocheck.getAngle3());
-                        mindistKPoint.setX(newx);
-                        mindistKPoint.setY(newy);
-                        mindist = J2stepweight*(fabs(kptocheck.getAngle1() - currentkpoint.getAngle1())) + J3stepweight*(fabs(kptocheck.getAngle2() - currentkpoint.getAngle2())) + J4stepweight*(fabs(kptocheck.getAngle3() - currentkpoint.getAngle3()));
-                    }
-                    else
-                    {
-                        //Peform distance calculations and check them against our current running mindistkpoint
-                        double tocheckdist = J2stepweight*(fabs(kptocheck.getAngle1() - currentkpoint.getAngle1())) + J3stepweight*(fabs(kptocheck.getAngle2() - currentkpoint.getAngle2())) + J4stepweight*(fabs(kptocheck.getAngle3() - currentkpoint.getAngle3()));
-
-                        if(tocheckdist < mindist)
-                        {
-                            mindist = tocheckdist; //Update our running mindist
-                            mindistKPoint.setAngle1(kptocheck.getAngle1()); //Update the mindistkpoint
-                            mindistKPoint.setAngle2(kptocheck.getAngle2());
-                            mindistKPoint.setAngle3(kptocheck.getAngle3());
-                        }
-                        
-                    
-                    }
-            
-                }
-                
-            }
-        }
+// Function template to calculate storage for vectors, specializes for vector types
+template<typename T>
+size_t calculateVectorStorage(const std::vector<T>& vec) {
+    size_t storage = sizeof(vec); // Size of vector object itself
+    for (const auto& item : vec) {
+        storage += calculateStorage(item); // Calculate storage of each item in vector
     }
-    
-        return mindistKPoint;
-    
+    storage += (vec.capacity() - vec.size()) * sizeof(T); // Account for vector capacity
+    return storage;
 }
-*/
+
+// Function template specialization for non-vector types, assumes trivial storage calculation
+template<typename T>
+size_t calculateStorage(const T& value) {
+    return sizeof(value); // By default, return the size of the value
+}
+
+// Template specialization for vectors, calls calculateVectorStorage
+template<typename T>
+size_t calculateStorage(const std::vector<T>& vec) {
+    return calculateVectorStorage(vec);
+}
 
 
 int main() 
@@ -171,60 +169,103 @@ int main()
 
 
     // Resize the outer two dimensions and initially each vector in the third dimension is empty
-    int rows = 2 * std::round((maxX - minX)/xsensitivity) + 1; //We multiply by 2 to account for negative nums and + 1 to account for 0
-    int columns = 2 * std::round((maxY - minY)/ysensitivity) + 1;
+    int xpositions = 2 * std::round((maxX - minX)/xsensitivity) + 1; //We multiply by 2 to account for negative nums and + 1 to account for 0
+    int ypositions = 2 * std::round((maxY - minY)/ysensitivity) + 1;
+    int zpositions = 2 * std::round((maxZ -minZ)/zsensitivity) + 1;
 
     //Rows will be as many possible X values within the sensitivity. Columns will be as many possible Y values.
     //This way we will be able to index a (x,y) position and then only loop through the kpoints there that have the correct (x,y) that were looking for
     //Later to index each position, we take the x and divide by the xsensitivity to get the index in our 3D array of the (x,y) position
 
-    kpointsXYplane.resize(rows, std::vector<std::vector<KinematicPoint>>(columns)); 
-    // Initialize KinematicPoints with all combinations of angles
-    for (int J2ang = minJ2angle; J2ang < maxJ2angle; J2ang += J2step) 
-    {
-        for (int J3ang = minJ3angle; J3ang < maxJ3angle; J3ang += J3step) 
-        {
-            for (int J4ang = minJ4angle; J4ang < maxJ4angle; J4ang+= J4step) 
-            {
-                double J2angle = J2ang * J2step;
-                double J3angle = J3ang * J3step;
-                double J4angle = J4ang * J4step;
+     // Resize x dimension
+    kpointsXYZplane.resize(xpositions);
 
-                // We will calculate every the x, y position with every angle possiblity
-                double x = L2length*cos(degreesToRadians(J2angle)) + L3length*cos(degreesToRadians(J2angle + J3angle)) + L4length*cos(degreesToRadians(J2angle + J3angle + J4angle)); 
-                double y = L2length*sin(degreesToRadians(J2angle)) + L3length*sin(degreesToRadians(J2angle + J3angle)) + L4length*sin(degreesToRadians(J2angle + J3angle + J4angle)); 
+    // Resize y dimension for each x
+    for (int x = 0; x < xpositions; ++x) {
+        kpointsXYZplane[x].resize(ypositions);
 
-                //std::cout << "J2: " << J2angle << " J3: " << J3angle << " J4: " << J4angle << "\nx: " << x << " y: " << y << std::endl;
-
-                //std::cout << "i: " << i << "\nj: " << j << "\nk: " << k << std::endl;
-
-                int rowpos = std::round((x + maxX)/xsensitivity);
-                int colpos = std::round((y + maxY)/ysensitivity);
-              //  std::cout<< rowpos << " " << colpos << " " << KinematicPoint(J2angle, J3angle, J4angle, x, y) << std::endl;
-                kpointsXYplane[rowpos][colpos].push_back(KinematicPoint(J2angle, J3angle, J4angle, x, y));
-
-
-                //kpointGrid[i][j][k] = KinematicPoint(J2angle, J3angle, J4angle, x, y);
-                //std::cout << kpointGrid[i][j][k] <<std::endl;
-                //system("pause");
-            }
+        // Resize z dimension for each y at current x
+        for (int y = 0; y < ypositions; ++y) {
+            kpointsXYZplane[x][y].resize(zpositions); // Initialize KinematicPoints for each z at current x,y
         }
     }
+    // Initialize KinematicPoints with all combinations of angles
+    for (int S1angle = minS1angle; S1angle < maxS1angle; S1angle += S1step) 
+    {
+    for(int J1angle = minJ1angle; J1angle < maxJ1angle; J1angle += J1step)
+    {
+    for (int J2angle = minJ2angle; J2angle < maxJ2angle; J2angle += J2step) 
+    {
+    for (int J3angle = minJ3angle; J3angle < maxJ3angle; J3angle+= J3step) 
+    {
+    for (int S3angle = minS3angle; S3angle < maxS3angle; S3angle += S3step)
+    {
+        
 
-    newx = -1;
-    newy = 1;
 
-          std::vector<KinematicPoint> points = kpointsXYplane[(newx+maxX)/xsensitivity][(newy + maxY)/ysensitivity];
+        // We will calculate every the x, y position with every angle possiblity
+        double x = cos(degreesToRadians(S1angle)) *
+           (
+             L1length * sin(degreesToRadians(J1angle)) + 
+             L2length * sin(degreesToRadians(J1angle + J2angle))
+           ) + 
+           cos(degreesToRadians(S1angle + S3angle)) *
+           L3length * sin(degreesToRadians(J1angle + J2angle + J3angle));
+            
+        double y = 
+        sin(degreesToRadians(S1angle))*
+        (L1length*sin(degreesToRadians(J1angle)) + 
+        L2length*sin(degreesToRadians(J1angle + J2angle)) 
+        )
+        + sin(degreesToRadians(S1angle + S3angle))*L3length*sin(degreesToRadians(J1angle + J2angle + J3angle)); 
+        double z = L1length*sin(degreesToRadians(J1angle)) + L2length*sin(degreesToRadians(J1angle + J2angle)) + L3length*sin(degreesToRadians(J1angle + J2angle + J3angle));
+
+        int xpos = std::round((x + maxX)/xsensitivity);
+        int ypos = std::round((y + maxY)/ysensitivity);
+        int zpos = std::round((z + maxZ)/zsensitivity);
+        kpointsXYZplane[xpos][ypos][zpos].push_back(KinematicPoint(S1angle, J1angle, J2angle, J3angle, S3angle, x, y, z));
+
+        /*
+        if(fabs(x-1) < 0.1 && fabs(y-0) < 0.1 && fabs(z-1) < 0.1)
+        {
+        std::cout << KinematicPoint(S1angle, J1angle, J2angle, J3angle, S3angle, x, y, z) << std::endl;
+        std::cout << std::round(x/xsensitivity) << " " << std::round(y/ysensitivity) << " " << std::round(z/zsensitivity) << std::endl;
+        system("pause");
+        }
+        */
+
+        //std::cout << kpointGrid[i][j][k] <<std::endl;
+        //system("pause");
+    }
+    }
+    }
+    }
+    }
+
+      size_t xyz_storage = calculateStorage(kpointsXYZplane);
+    std::cout << "Approximate storage for kpointsXYZplane: " << xyz_storage << " bytes\n";
+    
+
+
+    newx = 1;
+    newy = 0;
+    newz = 1;
+
+          std::vector<KinematicPoint> points = kpointsXYZplane[(newx+maxX)/xsensitivity][(newy + maxY)/ysensitivity][(newz+maxZ)/zsensitivity];
 
         for(int a = 0; a < points.size(); a++)
         {
             KinematicPoint point = points[a];
-            std::cout << point << " " << J2stepweight*(fabs(point.getAngle1() - currentkpoint.getAngle1())) + J3stepweight*(fabs(point.getAngle2() - currentkpoint.getAngle2())) + J4stepweight*(fabs(point.getAngle3() - currentkpoint.getAngle3())) << std::endl;
+            double tocheckdist = S1stepweight*(fabs(point.getAngle1() - currentkpoint.getAngle1())) + J1stepweight*(fabs(point.getAngle2() - currentkpoint.getAngle2())) + J2stepweight*(fabs(point.getAngle3() - currentkpoint.getAngle3())) + J3stepweight*(fabs(point.getAngle4() - currentkpoint.getAngle4())) +S3stepweight*(fabs(point.getAngle5() - currentkpoint.getAngle5()));
+
+            std::cout << point << " " << tocheckdist << std::endl;
         }   
+        
 
-        currentkpoint = GenerateNewKPoint(currentkpoint, newx, newy);
+        currentkpoint = GenerateNewKPoint(currentkpoint, newx, newy, newz);
 
-        if(currentkpoint.getX() == newx && currentkpoint.getY() == newy) //We found a proper angle orientation to get to (x, y)
+
+        if(currentkpoint.getX() == newx && currentkpoint.getY() == newy && currentkpoint.getZ() == newz) //We found a proper angle orientation to get to (x, y)
             std::cout << currentkpoint << std::endl;
         else
             std::cout << "Cannot produce x,y position";
