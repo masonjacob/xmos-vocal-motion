@@ -19,13 +19,12 @@
 #include <xclib.h>
 
 // XCORE -> RPI HAT:
-// X0D10 -> Pin 11
-// X0D11 -> Pin 9
-
+// X0D39 -> Pin 21
+// X0D11 -> Pin 19
 // Define stepper motor connections and steps per revolution:
 
 // Direction Pin is CK+ on TB6560
-out port direction_port = on tile[0]: XS1_PORT_1C; // X0D10
+out port direction_port = on tile[0]: XS1_PORT_1P; // X0D39
 
 // Step Pin is CLK+ on TB6560
 out port step_port = on tile[0]: XS1_PORT_1D; // X0D11
@@ -35,15 +34,15 @@ out port step_port = on tile[0]: XS1_PORT_1D; // X0D11
 int main (void) {
 
 // Set spinning direction clockwise
-direction_port <: 1;
+direction_port <: 0;
 
 // spin the stepper motor 1 revolution
   for (int i = 0; i < stepsPerRevolution; i++) {
   // These four lines result in 1 step:
   step_port <: 1;
-  delay_microseconds(2000);
+  delay_microseconds(1000);
   step_port <: 0;
-  delay_microseconds(2000);
+  delay_microseconds(1000);
   }
 
   return 0;

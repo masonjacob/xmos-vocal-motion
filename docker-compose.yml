@@ -6,7 +6,7 @@ services:
     volumes:
       - ./src:/home/src
       - shared_data:/home/shared
-      # bind mount to pass USB devices
+    devices:
       - /dev/bus/usb:/dev/bus/usb
     stdin_open: true
     tty: true
