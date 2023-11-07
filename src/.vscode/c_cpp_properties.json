@@ -1,27 +1,21 @@
 {
+    "version": 4,
     "configurations": [
         {
-            "name": "Linux",
+            "name": "Xcore",
             "includePath": [
                 "${workspaceFolder}/**"
             ],
-            "defines": [],
-            "compilerPath": "/usr/bin/gcc",
-            "cStandard": "c17",
-            "cppStandard": "gnu++17",
-            "intelliSenseMode": "linux-gcc-x64"
-        },
-        {
-            "name": "XMOS",
-            "includePath": [
-                "${workspaceFolder}/**"
+            "defines": [
+                "XSCOPE_IMPL"
             ],
-            "defines": [],
-            "compilerPath": "/opt/XMOS/XTC/15.1.4/bin/xcc",
-            "cStandard": "c17",
-            "cppStandard": "gnu++17",
-            "intelliSenseMode": "linux-gcc-x64"
+            "compilerPath": "${XMOS_TOOL_PATH}/bin/xcc",
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "clang-x64",
+            "compilerArgs": [
+                "-save-temps"
+            ]
         }
-    ],
-    "version": 4
+    ]
 }

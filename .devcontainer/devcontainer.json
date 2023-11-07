@@ -1,0 +1,13 @@
+{
+    "dockerComposeFile": "./../docker-compose.yml",
+    "service": "xmos-dev",
+	"workspaceFolder": "/home/src",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "MasonJacob.xc-code-highlighting",
+                "ms-vscode.cpptools"
+            ]
+        }
+    }
+}
