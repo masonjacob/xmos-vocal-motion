@@ -1,45 +1,13 @@
-#include "TB6560.h"
+#include "tb6560.h"
 
-TB6560::TB6560(int clock_pin, int direction_pin)
+TB6560(out port enable_port, out port direction_port, out port step_port)
 {
-	this->clock_pin=clock_pin;
-	this->direction_pin=direction_pin;
-	this->last_step_time = 0; // time stamp in us of the last step taken
-	
-	//Setting Arduino pins connected to clock and direction as output
-	pinMode(this->direction_pin,OUTPUT);
-	pinMode(this->clock_pin,OUTPUT);
+	this->step_port=step_port;
+	this->direction_port=direction_port;
+  this->enable_port=enable_port;
+	this->last_step_time = 0; // time stamp in us of the last step take
 	
 }
-
-TB6560::TB6560(int clock_pin,int direction_pin,uint8_t number_of_steps)
-{
-	this->clock_pin=clock_pin;
-	this->direction_pin=direction_pin;
-	this->steps=number_of_steps;
-	this->last_step_time = 0; // time stamp in us of the last step taken
-	
-	//Setting Arduino pins connected to clock and direction as output
-	pinMode(this->direction_pin,OUTPUT);
-	pinMode(this->clock_pin,OUTPUT);
-	
-}
-
-//	For one particular direction setdirection =1 else keep it 0;
-TB6560::TB6560(int clock_pin,int direction_pin,uint8_t number_of_steps,int setdirection)
-{
-	this->clock_pin=clock_pin;
-	this->direction_pin=direction_pin;
-	this->steps=number_of_steps;
-	this->direction=setdirection;
-	this->last_step_time = 0; // time stamp in us of the last step taken
-
-	//Setting Arduino pins connected to clock and direction as output
-	pinMode(this->direction_pin,OUTPUT);
-	pinMode(this->clock_pin,OUTPUT);
-	
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -59,11 +27,11 @@ void TB6560::setDirection(int motordirection)
 	
 	if(this-> direction==1)
 	{
-		digitalWrite(this->direction_pin,HIGH);
+		direction_port <: 1;
 	}
 	else if(this-> direction==0)
 	{
-		digitalWrite(this->direction_pin,LOW);
+		direction_port <: 0;
 	}
 }
 
@@ -84,7 +52,7 @@ void TB6560::start()
 	delay_microseconds(this->clock_delay);
 	step_port <: 0;
 	delay_microseconds(this->clock_delay);
-}
+} 
 
 void TB6560::stop()
 {
@@ -111,7 +79,10 @@ void TB6560::step(int steps_to_move)
   // decrement the number of steps, moving one step each time:
   while (steps_left > 0)
   {
-    unsigned long now = micros();
+    timer t;
+    unsigned long now;
+    t :> now;
+
     // move only if the appropriate delay has passed:
     if (now - this->last_step_time >= this->clock_delay)
     {
