@@ -17,6 +17,7 @@
 #include <print.h>
 #include <platform.h>
 #include <xclib.h>
+#include <xcore/port.h>
 #include "tb6560.h"
 
 // XCORE -> RPI HAT:

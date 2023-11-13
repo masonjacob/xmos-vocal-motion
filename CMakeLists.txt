@@ -3,6 +3,7 @@ project(my_app)
 
 ## Specify your application sources and includes
 file(GLOB_RECURSE APP_SOURCES src/*.c src/*.cpp src/*.xc)
+
 set(APP_INCLUDES
    src
    src/lib
@@ -20,7 +21,7 @@ target_compile_options(my_app PRIVATE
    -fxscope
    -mcmodel=large
    -Wno-xcore-fptrgroup
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/config.xscope
+   # ${CMAKE_CURRENT_SOURCE_DIR}/src/config.xscope
    ${CMAKE_CURRENT_SOURCE_DIR}/XK_VOICE_L71.xn
 )
 
@@ -39,7 +40,7 @@ target_compile_definitions(my_app PRIVATE
 target_link_options(my_app PRIVATE
    -report
    ${CMAKE_CURRENT_SOURCE_DIR}/XK_VOICE_L71.xn
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/config.xscope
+   # ${CMAKE_CURRENT_SOURCE_DIR}/src/config.xscope
 )
 
 

@@ -6,8 +6,9 @@
             "includePath": [
                 "${workspaceFolder}/**"
             ],
-            "defines": ["XSCOPE_IMPL"],
-            "compilerPath": "${XMOS_TOOL_PATH}/bin/xcc",
+            "defines": [
+                "XSCOPE_IMPL"
+            ],
             "cStandard": "gnu11",
             "cppStandard": "gnu++14",
             "intelliSenseMode": "clang-x64",
