@@ -17,11 +17,17 @@
 #include <print.h>
 #include <platform.h>
 #include <xclib.h>
+#include <xcore/port.h>
+#include "tb6560.h"
 
 // XCORE -> RPI HAT:
 // X0D39 -> Pin 21
 // X0D11 -> Pin 19
 // Define stepper motor connections and steps per revolution:
+
+
+// Undefined Enable Pin
+out port enable_port;
 
 // Direction Pin is CK+ on TB6560
 out port direction_port = on tile[0]: XS1_PORT_1P; // X0D39
@@ -29,9 +35,12 @@ out port direction_port = on tile[0]: XS1_PORT_1P; // X0D39
 // Step Pin is CLK+ on TB6560
 out port step_port = on tile[0]: XS1_PORT_1D; // X0D11
 
+
 #define stepsPerRevolution 400
 
 int main (void) {
+
+TB6560 motor = new TB6560(enable_port, direction_port, step_port);
 
 // Set spinning direction clockwise
 direction_port <: 0;
