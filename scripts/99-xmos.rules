@@ -1,0 +1,11 @@
+SUBSYSTEM!="usb|usb_device", GOTO="xmos_rules_end"
+ACTION!="add", GOTO="xmos_rules_end"
+
+# 20b1:f7d4 - XMOS XTAG-3
+ATTRS{idVendor}=="20b1", ATTRS{idProduct}=="f7d4", MODE="0666", SYMLINK="xtag3-%n"
+
+# 20b1:f7d5 - XMOS XTAG-4
+ATTRS{idVendor}=="20b1", ATTRS{idProduct}=="f7d5", MODE="0666", SYMLINK="xtag4-%n"
+
+LABEL="xmos_rules_end"
+
