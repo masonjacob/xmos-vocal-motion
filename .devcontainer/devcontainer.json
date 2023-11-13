@@ -6,7 +6,8 @@
         "vscode": {
             "extensions": [
                 "MasonJacob.xc-code-highlighting",
-                "ms-vscode.cpptools-extension-pack"
+                "ms-vscode.cpptools-extension-pack",
+                "ms-vscode.makefile-tools"
             ]
         }
     }
