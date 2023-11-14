@@ -4,7 +4,7 @@ services:
     image: masonjacob/xmos-dev:latest
     # image: ghcr.io/xmos/xcore_builder:v3
     volumes:
-      - ./:/home/container
+      - ./../:/home/container
       - shared_data:/home/shared
     devices:
       - /dev/bus/usb:/dev/bus/usb
