@@ -1,5 +1,5 @@
 {
-    "dockerComposeFile": "./../docker-compose.yml",
+    "dockerComposeFile": "./../.docker/docker-compose.yaml",
     "service": "xmos-dev",
 	"workspaceFolder": "/home/container",
     "customizations": {
