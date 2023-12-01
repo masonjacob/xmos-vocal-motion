@@ -4,31 +4,33 @@
 #include <ostream>
 #include <cstdlib> // Required for system()
 #include <type_traits>  
+#include <chrono>
+#include <Eigen/Dense>
 #include "KinematicPoint.h"
 
 //global variables
-const int minS1angle = 0;
-const int maxS1angle = 90;
+const double minS1angle = -180;
+const double maxS1angle = 180;
 
-const int minJ1angle = -40;
-const int maxJ1angle = 40;
-const int L1length = 1;
+const double minJ1angle = -135;
+const double maxJ1angle = 135;
+const double L1length = 1;
 
-const int minJ2angle = -40;
-const int maxJ2angle = 40;
-const int L2length = 1;
+const double minJ2angle = -135;
+const double maxJ2angle = 135;
+const double L2length = 1;
 
-const int minJ3angle = -40;
-const int maxJ3angle = 40;
-const int L3length = 1;
+const double minJ3angle = -135;
+const double maxJ3angle = 135;
+const double L3length = 1;
 
-const int minS3angle = 0;
-const int maxS3angle = 90;
+const double minS3angle = -180;
+const double maxS3angle = 180;
 
 const int S1step = 5;
-const int J1step = 10;
-const int J2step = 10;
-const int J3step = 10;
+const int J1step = 5;
+const int J2step = 5;
+const int J3step = 5;
 const int S3step = 5;
 
 //Weights for generating the nexxt set of angles. We generally want J1 to move as little as possible, so we make its weight bigger
@@ -76,6 +78,50 @@ const double PI = 3.14159265358979323846;
 // Function to convert degrees to radians
 double degreesToRadians(double degrees) {
     return degrees * (PI / 180.0);
+}
+
+// Function for x position
+double xPosition(double S1angle, double J1angle, double J2angle, double J3angle, double S3angle) {
+    return std::cos(degreesToRadians(S1angle)) *
+           (L1length * std::sin(degreesToRadians(J1angle)) + 
+            L2length * std::sin(degreesToRadians(J1angle + J2angle))) + 
+           std::cos(degreesToRadians(S1angle + S3angle)) *
+           L3length * std::sin(degreesToRadians(J1angle + J2angle + J3angle));
+}
+
+// Function for y position
+double yPosition(double S1angle, double J1angle, double J2angle, double J3angle, double S3angle) {
+    return std::sin(degreesToRadians(S1angle)) *
+           (L1length * std::sin(degreesToRadians(J1angle)) + 
+            L2length * std::sin(degreesToRadians(J1angle + J2angle))) +
+           std::sin(degreesToRadians(S1angle + S3angle)) * L3length * std::sin(degreesToRadians(J1angle + J2angle + J3angle));
+}
+
+// Function for z position
+double zPosition(double S1angle, double J1angle, double J2angle, double J3angle, double S3angle) {
+    return L1length * std::sin(degreesToRadians(J1angle)) + 
+           L2length * std::sin(degreesToRadians(J1angle + J2angle)) + 
+           L3length * std::sin(degreesToRadians(J1angle + J2angle + J3angle));
+}
+
+// Function to approximate partial derivative
+double approximatePartialDerivative(double (*func)(double, double, double, double, double), 
+                                    double S1angle, double J1angle, double J2angle, double J3angle, double S3angle, 
+                                    int angleIdx, 
+                                    double h = 1e-5) {
+    // Array to store current angles
+    double angles[5] = {S1angle, J1angle, J2angle, J3angle, S3angle};
+
+    // Modify angle at index for forward difference
+    angles[angleIdx] += h;
+    double forward = func(angles[0], angles[1], angles[2], angles[3], angles[4]);
+
+    // Modify angle at index for backward difference
+    angles[angleIdx] -= 2 * h;
+    double backward = func(angles[0], angles[1], angles[2], angles[3], angles[4]);
+
+    // Compute derivative
+    return (forward - backward) / (2 * h);
 }
 
 //This method will take in ur current angle positions and your new (x,y) position and give us back the kpoint with angles that will get
@@ -163,112 +209,249 @@ size_t calculateStorage(const std::vector<T>& vec) {
     return calculateVectorStorage(vec);
 }
 
+KinematicPoint getKinematicPointAtoB(KinematicPoint currentkp, double desiredx, double desiredy, double desiredz)
+{
+    //KinematicPoint currentkp;
+
+
+     // Example usage: Compute partial derivatives at a specific configuration
+ //   double S1angle = 0, J1angle = 11, J2angle =44, J3angle = 27, S3angle = 0;
+   // double desiredx = -2, desiredy = 0, desiredz = -2;
+  //  double currentx = 2, currenty = 0, currentz = 2;
+
+    double S1angle = currentkp.getAngle1();
+    double J1angle = currentkp.getAngle2();
+    double J2angle = currentkp.getAngle3();
+    double J3angle = currentkp.getAngle4();
+    double S3angle = currentkp.getAngle5();
+    double currentx = currentkp.getX();
+    double currenty = currentkp.getY();
+    double currentz = currentkp.getZ();
+
+
+
+
+    // Compute partial derivatives for x
+    double dx_dS1 = approximatePartialDerivative(xPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 0);
+    double dx_dJ1 = approximatePartialDerivative(xPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 1);
+    double dx_dJ2 = approximatePartialDerivative(xPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 2);
+    double dx_dJ3 = approximatePartialDerivative(xPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 3);
+    double dx_dS3 = approximatePartialDerivative(xPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 4);
+
+    double dy_dS1 = approximatePartialDerivative(yPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 0);
+    double dy_dJ1 = approximatePartialDerivative(yPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 1);
+    double dy_dJ2 = approximatePartialDerivative(yPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 2);
+    double dy_dJ3 = approximatePartialDerivative(yPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 3);
+    double dy_dS3 = approximatePartialDerivative(yPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 4);
+
+   // double dz_dS1 = approximatePartialDerivative(zPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 0);
+    double dz_dJ1 = approximatePartialDerivative(zPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 1);
+    double dz_dJ2 = approximatePartialDerivative(zPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 2);
+    double dz_dJ3 = approximatePartialDerivative(zPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 3);
+    //double dz_dS3 = approximatePartialDerivative(zPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 4);
+    // ... similarly compute other derivatives
+
+ //// Create a 5x3 matrix
+    Eigen::MatrixXd partials(3, 5);
+    partials << dx_dS1, dx_dJ1, dx_dJ2, dx_dJ3, dx_dS3,
+          dy_dS1, dy_dJ1, dy_dJ2, dy_dJ3, dy_dS3, 
+          0, dz_dJ1, dz_dJ2, dz_dJ3, 0;
+
+    Eigen::MatrixXd desiredxyz(3, 1);
+    desiredxyz << desiredx,
+                  desiredy,
+                  desiredz;
+
+    Eigen::MatrixXd currentxyz(3, 1);
+    currentxyz << currentx,
+                  currenty,
+                  currentz;
+
+    Eigen::MatrixXd b = desiredxyz - currentxyz;
+
+    // Compute the SVD
+    Eigen::JacobiSVD<Eigen::MatrixXd> svd(partials, Eigen::ComputeFullU | Eigen::ComputeFullV);
+
+    Eigen::MatrixXd delta_angles = svd.solve(b);
+
+    // Define a tolerance for the convergence
+    double tolerance = 0.1; // Example value, adjust as needed
+
+// while ((desiredxyz - currentxyz).norm() > tolerance) {
+
+    while (std::abs(desiredxyz(0,0) - currentxyz(0,0)) > tolerance || std::abs(desiredxyz(1,0) - currentxyz(1,0)) > tolerance || std::abs(desiredxyz(2,0) - currentxyz(2,0)) > tolerance) {
+    
+    /*
+        S1angle += delta_angles(0, 0); // Access the first element
+        J1angle += delta_angles(1, 0); // Access the second element
+        J2angle += delta_angles(2, 0); // Access the third element
+        J3angle += delta_angles(3, 0); // Access the fourth element
+        S3angle += delta_angles(4, 0); // Access the fifth element
+    */
+
+    
+        // Update and limit each joint angle
+        S1angle = std::min(std::max(S1angle + delta_angles(0, 0), minS1angle), maxS1angle);
+        J1angle = std::min(std::max(J1angle + delta_angles(1, 0), minJ1angle), maxJ1angle);
+        J2angle = std::min(std::max(J2angle + delta_angles(2, 0), minJ2angle), maxJ2angle);
+        J3angle = std::min(std::max(J3angle + delta_angles(3, 0), minJ3angle), maxJ3angle);
+        S3angle = std::min(std::max(S3angle + delta_angles(4, 0), minS3angle), maxS3angle);
+
+
+
+      //  std::cout << "Currentxyz " << currentxyz << std::endl;
+/*
+        std::cout << "S1: " << fmod(S1angle, 360.0) 
+                << "\nJ1: " << fmod(J1angle, 360.0) 
+                << "\nJ2: " << fmod(J2angle, 360.0) 
+                << "\nJ3: " << fmod(J3angle, 360.0) 
+                << "\nS3: " << fmod(S3angle, 360.0) 
+                << std::endl;
+*/
+        currentxyz(0, 0) = xPosition(S1angle, J1angle, J2angle, J3angle, S3angle);
+        currentxyz(1,0) = yPosition(S1angle, J1angle, J2angle, J3angle, S3angle);
+        currentxyz(2,0) = zPosition(S1angle, J1angle, J2angle, J3angle, S3angle);
+
+
+      /*  
+        std::cout << "S1: " << S1angle 
+                << "\nJ1: " << J1angle 
+                << "\nJ2: " << J2angle 
+                << "\nJ3: " << J3angle 
+                << "\nS3: " << S3angle 
+                << std::endl;
+
+        std::cout << currentxyz << std::endl;
+    */
+
+       currentkp = KinematicPoint(S1angle, J1angle, J2angle, J3angle, S3angle, currentxyz(0,0), currentxyz(1,0), currentxyz(2,0));
+      // std::cout << currentkp << std::endl;
+     //  std::cout << std::abs(desiredxyz(0,0) - currentxyz(0,0)) << " " << std::abs(desiredxyz(1,0) - currentxyz(1,0)) << " " << std::abs(desiredxyz(0,0) - currentxyz(0,0)) << std::endl;
+
+/*
+        std::cout << "X: " << xPosition(fmod(S1angle, 360.0), fmod(J1angle, 360.0), fmod(J2angle, 360.0), fmod(J3angle, 360.0), fmod(S3angle, 360.0)) 
+          << " Y: " << yPosition(fmod(S1angle, 360.0), fmod(J1angle, 360.0), fmod(J2angle, 360.0), fmod(J3angle, 360.0), fmod(S3angle, 360.0)) 
+          << " Z: " << zPosition(fmod(S1angle, 360.0), fmod(J1angle, 360.0), fmod(J2angle, 360.0), fmod(J3angle, 360.0), fmod(S3angle, 360.0)) 
+          << std::endl;
+          */
+
+
+        // Compute partial derivatives for x
+        dx_dS1 = approximatePartialDerivative(xPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 0);
+        dx_dJ1 = approximatePartialDerivative(xPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 1);
+        dx_dJ2 = approximatePartialDerivative(xPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 2);
+        dx_dJ3 = approximatePartialDerivative(xPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 3);
+        dx_dS3 = approximatePartialDerivative(xPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 4);
+
+        dy_dS1 = approximatePartialDerivative(yPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 0);
+        dy_dJ1 = approximatePartialDerivative(yPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 1);
+        dy_dJ2 = approximatePartialDerivative(yPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 2);
+        dy_dJ3 = approximatePartialDerivative(yPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 3);
+        dy_dS3 = approximatePartialDerivative(yPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 4);
+
+    // double dz_dS1 = approximatePartialDerivative(zPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 0);
+        dz_dJ1 = approximatePartialDerivative(zPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 1);
+        dz_dJ2 = approximatePartialDerivative(zPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 2);
+        dz_dJ3 = approximatePartialDerivative(zPosition, S1angle, J1angle, J2angle, J3angle, S3angle, 3);
+
+        partials << dx_dS1, dx_dJ1, dx_dJ2, dx_dJ3, dx_dS3,
+            dy_dS1, dy_dJ1, dy_dJ2, dy_dJ3, dy_dS3, 
+            0, dz_dJ1, dz_dJ2, dz_dJ3, 0;
+
+        double lambda = 0.0001; // Example damping factor, tune as needed. Higher number more stability, less precision. Lower number more precision, less stability
+
+        // Update joint angles with the computed changes
+        // This step depends on how your system's angles are represented
+        // Example: S1angle += delta_angles(0, 0), etc.
+
+        // Recompute the current position based on new joint angles using forward kinematics
+        // currentxyz << new x, new y, new z positions based on updated angles
+
+        // Recompute the Jacobian matrix with updated joint angles
+        // Update partials matrix here
+
+        // Compute the damped pseudo-inverse
+        Eigen::MatrixXd I = Eigen::MatrixXd::Identity(partials.rows(), partials.rows());
+        Eigen::MatrixXd dampedInverse = partials.transpose() * (partials * partials.transpose() + lambda * lambda * I).inverse();
+
+        // Update b with the new current position
+        b = desiredxyz - currentxyz;
+
+        // Solve for the new delta_angles using the damped pseudo-inverse
+        delta_angles = dampedInverse * b;
+
+    }
+
+    return currentkp;
+
+
+
+}
 
 int main() 
 {
 
+    auto start = std::chrono::high_resolution_clock::now();
 
-    // Resize the outer two dimensions and initially each vector in the third dimension is empty
-    int xpositions = 2 * std::round((maxX - minX)/xsensitivity) + 1; //We multiply by 2 to account for negative nums and + 1 to account for 0
-    int ypositions = 2 * std::round((maxY - minY)/ysensitivity) + 1;
-    int zpositions = 2 * std::round((maxZ -minZ)/zsensitivity) + 1;
+    double currentx = 2, currenty = 0, currentz = 2;
+    double finalx = 1, finaly = 1, finalz = 1;
+    double S1angle = 0, J1angle = 11, J2angle =44, J3angle = 27, S3angle = 0;
 
-    //Rows will be as many possible X values within the sensitivity. Columns will be as many possible Y values.
-    //This way we will be able to index a (x,y) position and then only loop through the kpoints there that have the correct (x,y) that were looking for
-    //Later to index each position, we take the x and divide by the xsensitivity to get the index in our 3D array of the (x,y) position
+    KinematicPoint currentkp = KinematicPoint(S1angle, J1angle, J2angle, J3angle, S3angle, currentx, currenty, currentz);
 
-     // Resize x dimension
-    kpointsXYZplane.resize(xpositions);
+    int numofpointsAtoB = 10; // Custom length for the vector
+    std::vector<KinematicPoint> pointsbetweenAtoB;
+    std::cout << getKinematicPointAtoB(currentkp, 1.63636, 0, 1.63636) << std::endl;
 
-    // Resize y dimension for each x
-    for (int x = 0; x < xpositions; ++x) {
-        kpointsXYZplane[x].resize(ypositions);
+      // Loop to generate and store the points
+    for (int i = 1; i <= numofpointsAtoB + 1; i++) 
+    {
+        
+        double t = i / (double)(numofpointsAtoB + 1); // Calculate the fraction
 
-        // Resize z dimension for each y at current x
-        for (int y = 0; y < ypositions; ++y) {
-            kpointsXYZplane[x][y].resize(zpositions); // Initialize KinematicPoints for each z at current x,y
-        }
-    }
-    // Initialize KinematicPoints with all combinations of angles
-    for (int S1angle = minS1angle; S1angle < maxS1angle; S1angle += S1step) 
-    {
-    for(int J1angle = minJ1angle; J1angle < maxJ1angle; J1angle += J1step)
-    {
-    for (int J2angle = minJ2angle; J2angle < maxJ2angle; J2angle += J2step) 
-    {
-    for (int J3angle = minJ3angle; J3angle < maxJ3angle; J3angle+= J3step) 
-    {
-    for (int S3angle = minS3angle; S3angle < maxS3angle; S3angle += S3step)
-    {
         
 
 
-        // We will calculate every the x, y position with every angle possiblity
-        double x = cos(degreesToRadians(S1angle)) *
-           (
-             L1length * sin(degreesToRadians(J1angle)) + 
-             L2length * sin(degreesToRadians(J1angle + J2angle))
-           ) + 
-           cos(degreesToRadians(S1angle + S3angle)) *
-           L3length * sin(degreesToRadians(J1angle + J2angle + J3angle));
-            
-        double y = 
-        sin(degreesToRadians(S1angle))*
-        (L1length*sin(degreesToRadians(J1angle)) + 
-        L2length*sin(degreesToRadians(J1angle + J2angle)) 
-        )
-        + sin(degreesToRadians(S1angle + S3angle))*L3length*sin(degreesToRadians(J1angle + J2angle + J3angle)); 
-        double z = L1length*sin(degreesToRadians(J1angle)) + L2length*sin(degreesToRadians(J1angle + J2angle)) + L3length*sin(degreesToRadians(J1angle + J2angle + J3angle));
+        double desiredx = currentkp.getX() + t * (finalx - currentkp.getX());
+        double desiredy = currentkp.getY() + t * (finaly - currentkp.getY());
+        double desiredz = currentkp.getZ() + t * (finalz - currentkp.getZ());
 
-        int xpos = std::round((x + maxX)/xsensitivity);
-        int ypos = std::round((y + maxY)/ysensitivity);
-        int zpos = std::round((z + maxZ)/zsensitivity);
-        kpointsXYZplane[xpos][ypos][zpos].push_back(KinematicPoint(S1angle, J1angle, J2angle, J3angle, S3angle, x, y, z));
+        //Round to the milimeter
+        desiredx = std::round(desiredx * 10.0) / 10.0;
+        desiredy = std::round(desiredy * 10.0) / 10.0;
+        desiredz = std::round(desiredz * 10.0) / 10.0;
 
-        /*
-        if(fabs(x-1) < 0.1 && fabs(y-0) < 0.1 && fabs(z-1) < 0.1)
-        {
-        std::cout << KinematicPoint(S1angle, J1angle, J2angle, J3angle, S3angle, x, y, z) << std::endl;
-        std::cout << std::round(x/xsensitivity) << " " << std::round(y/ysensitivity) << " " << std::round(z/zsensitivity) << std::endl;
-        system("pause");
-        }
-        */
+        std::cout << desiredx << std::endl;        
+       std::cout << desiredy << std::endl;        
+        std::cout << desiredz << std::endl;        
 
-        //std::cout << kpointGrid[i][j][k] <<std::endl;
-        //system("pause");
-    }
-    }
-    }
-    }
+        KinematicPoint resultkp = getKinematicPointAtoB(currentkp, desiredx, desiredy, desiredz);        
+
+      std::cout << resultkp << std::endl;
+
+     //   std::cout << "i: " << i << std::endl;
+
+        pointsbetweenAtoB.push_back(resultkp);
     }
 
-      size_t xyz_storage = calculateStorage(kpointsXYZplane);
-    std::cout << "Approximate storage for kpointsXYZplane: " << xyz_storage << " bytes\n";
-    
 
 
-    newx = 1;
-    newy = 0;
-    newz = 1;
+     // Get the ending timepoint
+    auto stop = std::chrono::high_resolution_clock::now();
 
-          std::vector<KinematicPoint> points = kpointsXYZplane[(newx+maxX)/xsensitivity][(newy + maxY)/ysensitivity][(newz+maxZ)/zsensitivity];
+    // Calculate the duration
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 
-        for(int a = 0; a < points.size(); a++)
-        {
-            KinematicPoint point = points[a];
-            double tocheckdist = S1stepweight*(fabs(point.getAngle1() - currentkpoint.getAngle1())) + J1stepweight*(fabs(point.getAngle2() - currentkpoint.getAngle2())) + J2stepweight*(fabs(point.getAngle3() - currentkpoint.getAngle3())) + J3stepweight*(fabs(point.getAngle4() - currentkpoint.getAngle4())) +S3stepweight*(fabs(point.getAngle5() - currentkpoint.getAngle5()));
-
-            std::cout << point << " " << tocheckdist << std::endl;
-        }   
-        
-
-        currentkpoint = GenerateNewKPoint(currentkpoint, newx, newy, newz);
+    // Output the duration
+    std::cout << "Time taken by function: " << duration.count() << " milliseconds" << std::endl;
 
 
-        if(currentkpoint.getX() == newx && currentkpoint.getY() == newy && currentkpoint.getZ() == newz) //We found a proper angle orientation to get to (x, y)
-            std::cout << currentkpoint << std::endl;
-        else
-            std::cout << "Cannot produce x,y position";
 
+
+
+
+
+
+   
     return 0;
 }
