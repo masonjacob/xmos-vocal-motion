@@ -1,7 +1,7 @@
 {
     "dockerComposeFile": "./../.docker/docker-compose.yaml",
     "service": "xmos-dev",
-	"workspaceFolder": "/home/container",
+	"workspaceFolder": "/opt/XMOS/sln_voice",
     "customizations": {
         "vscode": {
             "extensions": [
@@ -10,5 +10,6 @@
                 "ms-vscode.makefile-tools"
             ]
         }
-    }
+    },
+    "overrideCommand": false
 }
