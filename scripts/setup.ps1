@@ -1,5 +1,29 @@
 # Attach XTAG Device to WSL and run UDEV rules
 
+# Function to convert Windows Path to WSL Path
+function Convert-WindowsPathToWSLPath {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$WindowsPath
+    )
+
+    # Convert drive part to /mnt/<lowercase drive letter>/
+
+    $lowercaseChar = $WindowsPath[0].toString()
+    $lowercaseChar = $lowercaseChar.ToLower()
+    $WSLPath = $lowercaseChar + $WindowsPath.Substring(1)
+
+    $WSLPath = $WSLPath -replace '^([A-Z]):\\', '/mnt/$1/'
+
+    # Convert backslashes to forward slashes
+    $WSLPath = $WSLPath -replace '\\', '/'
+    # Add \ before any spaces
+    $WSLPath = $WSLPath -replace ' ', '\ '
+
+    return $WSLPath
+}
+
 # Run the `usbipd wsl list` command and capture its output
 $usbipdOutput = usbipd wsl list
 # Use the Where-Object cmdlet to filter the list based on the DEVICE name
@@ -16,15 +40,19 @@ foreach ($busid in $busids) {
 }
 
 # Add UDEV rules
-$wslPath = wsl wslpath $PWD.Path 
+$wslPath = Convert-WindowsPathToWSLPath -WindowsPath $PWD.Path
+$udevPath = "/etc/udev/rules.d"
 
-wsl mkdir ~/scripts
-wsl cp "$wslPath\99-xmos.rules" ~/scripts
-wsl cp "$wslPath\setup_xmos_devices.sh" ~/scripts
-wsl cp "$wslPath\check_xmos_devices.sh" ~/scripts
-wsl chmod +x ~/scripts/setup_xmos_devices.sh
-wsl chmod +x ~/scripts/check_xmos_devices.sh
-wsl sudo -e ~/scripts/setup_xmos_devices.sh
-wsl sudo -e ~/scripts/check_xmos_devices.sh
+wsl sudo cp "$wslPath/scripts/99-xmos.rules" $udevPath 
+wsl sudo service udev reload
 
-wsl sudo rm ~/scripts -r -f
+# $tempPath = "/tmp/scripts"
+# wsl mkdir $tempPath
+# wsl cp "$wslPath\setup_xmos_devices.sh" $tempPath
+# wsl cp "$wslPath\check_xmos_devices.sh" $tempPath
+# wsl chmod +x $tempPath/setup_xmos_devices.sh
+# wsl chmod +x $tempPath/check_xmos_devices.sh
+# wsl sudo -e $tempPath/setup_xmos_devices.sh
+# wsl sudo -e $tempPath/check_xmos_devices.sh
+
+# wsl sudo rm $tempPath -r -f
