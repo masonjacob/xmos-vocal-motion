@@ -140,18 +140,18 @@ uint16_t TMCStepper::MSCNT() {
   return read(MSCNT_t::address);
 }
 
-uint32_t TMCStepper::MSCURACT() { return read(MSCURACT_t::address); }
-int16_t TMCStepper::cur_a() {
-  MSCURACT_t r{0};
-  r.sr = MSCURACT();
-  int16_t value = r.cur_a;
-  if (value > 255) value -= 512;
-  return value;
-}
-int16_t TMCStepper::cur_b() {
-  MSCURACT_t r{0};
-  r.sr = MSCURACT();
-  int16_t value = r.cur_b;
-  if (value > 255) value -= 512;
-  return value;
-}
+// uint32_t TMCStepper::MSCURACT() { return read(MSCURACT_t::address); }
+// int16_t TMCStepper::cur_a() {
+//   MSCURACT_t r{0};
+//   r.sr = MSCURACT();
+//   int16_t value = r.cur_a;
+//   if (value > 255) value -= 512;
+//   return value;
+// }
+// int16_t TMCStepper::cur_b() {
+//   MSCURACT_t r{0};
+//   r.sr = MSCURACT();
+//   int16_t value = r.cur_b;
+//   if (value > 255) value -= 512;
+//   return value;
+// }

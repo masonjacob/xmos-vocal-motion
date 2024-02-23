@@ -1,6 +1,7 @@
 {
     "C_Cpp.default.compilerPath": "/opt/XMOS/XTC/15.2.1/bin/xcc",
     "files.associations": {
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "cstdint": "cpp"
     }
 }

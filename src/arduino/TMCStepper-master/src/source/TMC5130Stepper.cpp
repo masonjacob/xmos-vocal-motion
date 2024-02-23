@@ -1,5 +1,6 @@
 #include "TMCStepper.h"
 #include "TMC_MACROS.h"
+#include "spi.h"
 
 // TMC5130Stepper::TMC5130Stepper(uint16_t pinCS, float RS, int8_t link) : TMC2160Stepper(pinCS, RS, link)
 //   { defaults(); }
@@ -22,21 +23,8 @@ TMC5130Stepper::TMC5130Stepper(spi_master_device_t *dev,
         uint32_t cs_to_clk_delay_ticks,
         uint32_t clk_to_cs_delay_ticks,
         uint32_t cs_to_cs_delay_ticks) :
-      TMC2160Stepper(spi_master_device_t *dev,
-        spi_master_t *spi,
-        uint32_t cs_pin,
-        int cpol,
-        int cpha,
-        spi_master_source_clock_t source_clock,
-        uint32_t clock_divisor,
-        spi_master_sample_delay_t miso_sample_delay,
-        uint32_t miso_pad_delay,
-        uint32_t cs_to_clk_delay_ticks,
-        uint32_t clk_to_cs_delay_ticks,
-        uint32_t cs_to_cs_delay_ticks)
-  {
-    spi_master_device_init(*dev,
-        *spi,
+      TMC2160Stepper(dev,
+        spi,
         cs_pin,
         cpol,
         cpha,
@@ -46,7 +34,20 @@ TMC5130Stepper::TMC5130Stepper(spi_master_device_t *dev,
         miso_pad_delay,
         cs_to_clk_delay_ticks,
         clk_to_cs_delay_ticks,
-        cs_to_cs_delay_ticks);
+        cs_to_cs_delay_ticks)
+  {
+    // spi_master_device_init(dev,
+    //     spi,
+    //     cs_pin,
+    //     cpol,
+    //     cpha,
+    //     source_clock,
+    //     clock_divisor,
+    //     miso_sample_delay,
+    //     miso_pad_delay,
+    //     cs_to_clk_delay_ticks,
+    //     clk_to_cs_delay_ticks,
+    //     cs_to_cs_delay_ticks);
        defaults();
     
   }

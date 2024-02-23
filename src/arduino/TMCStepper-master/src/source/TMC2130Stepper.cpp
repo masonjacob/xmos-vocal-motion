@@ -3,11 +3,13 @@
 #include <cstdint>
 #include "spi.h"
 
+float RS = 0.11;
+
 //NEED TO INITIALIZE XMOS SPECIFIC CONSTANTS DOWN HERE
 
 
-int8_t TMC2130Stepper::chain_length = 0;
-uint32_t TMC2130Stepper::spi_speed = 16000000/8;
+// int8_t TMC2130Stepper::chain_length = 0;
+// uint32_t TMC2130Stepper::spi_speed = 16000000/8;
 
 
 
@@ -34,11 +36,11 @@ TMC2130Stepper::TMC2130Stepper(spi_master_device_t *dev,
         uint32_t miso_pad_delay,
         uint32_t cs_to_clk_delay_ticks,
         uint32_t clk_to_cs_delay_ticks,
-        uint32_t cs_to_cs_delay_ticks) :
-  TMCStepper(default_RS)
+        uint32_t cs_to_cs_delay_ticks) : TMCStepper(RS), dev(dev), spi(spi), cs_pin(cs_pin) 
+ 
   {
-    spi_master_device_init(*dev,
-        *spi,
+    spi_master_device_init(dev,
+        spi,
         cs_pin,
         cpol,
         cpha,
@@ -100,12 +102,12 @@ void TMC2130Stepper::defaults() {
 
 // __attribute__((weak))
 void TMC2130Stepper::beginTransaction() {
-  spi_master_start_transaction(&dev);
+  spi_master_start_transaction(dev);
 }
 
 // __attribute__((weak))
 void TMC2130Stepper::endTransaction() {
-  spi_master_end_transaction(&dev);
+  spi_master_end_transaction(dev);
 }
 
 
@@ -120,13 +122,13 @@ void TMC2130Stepper::endTransaction() {
 //   return out;
 // }
 
-uint8_t TMC2130Stepper::transfer(const uint8_t data) {
-    uint8_t receivedData = 0; // To hold the data received back from the SPI device
-    spi_master_transfer(&dev, &data, &receivedData, 1); // Pass the address of `receivedData` for `data_in`
+uint8_t TMC2130Stepper::transfer(uint8_t data) {
+  uint8_t receivedData = 0; // To hold the data received back from the SPI device
+  spi_master_transfer(dev, &data, &receivedData, 1); // Pass the address of `receivedData` for `data_in`
     return receivedData; // Return the data received during the SPI transfer
 }
 
-void TMC2130Stepper::transferEmptyBytes(const uint8_t n) {
+void TMC2130Stepper::transferEmptyBytes(uint8_t n) {
   for (uint8_t i = 0; i < n; i++) {
     transfer(0x00);
   }
@@ -173,7 +175,7 @@ uint32_t TMC2130Stepper::read(uint8_t addressByte) {
   // out <<= 8;
   // out |= transfer(0x00);
 
-  status_response = transfer(addressByte)
+  status_response = transfer(addressByte);
    // Send the address byte again
   out  = transfer(0x00);
   out <<= 8;

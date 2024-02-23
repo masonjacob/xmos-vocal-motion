@@ -4,7 +4,8 @@
         {
             "name": "Xcore",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "/opt/XMOS/XTC/15.2.1/target/include/sys"
             ],
             "defines": [
                 "XSCOPE_IMPL"

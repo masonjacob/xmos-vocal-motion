@@ -12,7 +12,7 @@ namespace TMC2160_n {
               encb_dcen_cfg4 : 1,
               enca_dcin_cfg5 : 1,
               drv_enn : 1,
-              dco_cfg6 : 1,
+              dco_cfg6 : 1,   
               : 2;
         uint16_t : 16;
         uint8_t version : 8;
