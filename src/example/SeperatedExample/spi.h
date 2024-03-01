@@ -4,7 +4,6 @@
 
 extern "C" {
 
-
 /** \file
  *  \brief API for SPI I/O
  */
@@ -249,11 +248,6 @@ inline void spi_master_delay_before_next_transfer(
     }
 }
 
-void spi_master_delay_before_next_transfer(
-        spi_master_device_t *dev,
-        uint32_t delay_ticks)
-{
-
 /**
  * Ends a SPI transaction with the specified SPI device. This leaves chip select de-asserted.
  *
@@ -392,7 +386,4 @@ void spi_slave(
         uint32_t thread_mode);
 
 /**@}*/ // END: addtogroup hil_spi_slave
-
-
-}
 }

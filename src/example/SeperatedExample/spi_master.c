@@ -1,7 +1,5 @@
 // Copyright 2021-2022 XMOS LIMITED.
 // This Software is subject to the terms of the XMOS Public Licence: Version 1.
-
-
 #include <stdint.h>
 
 #include "spi.h"
@@ -316,27 +314,3 @@ void spi_master_init(
         port_clear_buffer(spi->miso_port);
     }
 }
-
-void spi_master_delay_before_next_transfer(
-        spi_master_device_t *dev,
-        uint32_t delay_ticks)
-{
-    spi_master_t *spi = dev->spi_master_ctx;
-
-    spi->delay_before_transfer = 1;
-
-    port_clear_trigger_time(spi->cs_port);
-
-    /* Assert CS now */
-    port_out(spi->cs_port, dev->cs_assert_val);
-    port_sync(spi->cs_port);
-
-    /*
-     * Assert CS again, scheduled for earliest time the
-     * next transfer is allowed to start.
-     */
-    if (delay_ticks >= SPI_MASTER_MINIMUM_DELAY) {
-        port_out_at_time(spi->cs_port, port_get_trigger_time(spi->cs_port) + delay_ticks, dev->cs_assert_val);
-    }
-}
-

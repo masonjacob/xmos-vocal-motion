@@ -21,8 +21,8 @@
 main.xe: main.o CHOPCONF.o COOLCONF.o DRV_CONF.o DRV_STATUS.o DRVCONF.o DRVCTRL.o DRVSTATUS.o ENCMODE.o GCONF.o IHOLD_IRUN.o PWMCONF.o RAMP_STAT.o SGCSCONF.o SHORT_CONF.o SMARTEN.o spi.o SW_MODE.o TMC2130Stepper.o TMC2160Stepper.o TMC5130Stepper.o TMC5160Stepper.o Stepper.o
 	xcc -w -std=c++11 main.o CHOPCONF.o COOLCONF.o DRV_CONF.o DRV_STATUS.o DRVCONF.o DRVCTRL.o DRVSTATUS.o ENCMODE.o GCONF.o IHOLD_IRUN.o PWMCONF.o RAMP_STAT.o SGCSCONF.o SHORT_CONF.o SMARTEN.o spi.o SW_MODE.o TMC2130Stepper.o TMC2160Stepper.o TMC5130Stepper.o TMC5160Stepper.o Stepper.o -O2 -target=XU316-1024-QF60A-C24 -o main.xe
 
-main.o: main.xc
-	xcc -w -std=c++11 -c main.xc -O2 -target=XU316-1024-QF60A-C24 -o main.o
+main.o: main.cpp
+	xcc -w -std=c++11 -c main.cpp -O2 -target=XU316-1024-QF60A-C24 -o main.o
 
 CHOPCONF.o:
 	xcc -w -std=c++11 -c ../arduino/TMCStepper-master/src/source/CHOPCONF.cpp -I../arduino/TMCStepper-master/src/ -O2 -target=XU316-1024-QF60A-C24 -o CHOPCONF.o
@@ -69,8 +69,12 @@ SHORT_CONF.o:
 SMARTEN.o:
 	xcc -w -std=c++11 -c ../arduino/TMCStepper-master/src/source/SMARTEN.cpp -I../arduino/TMCStepper-master/src/ -O2 -target=XU316-1024-QF60A-C24 -o SMARTEN.o
 
-spi.o:
-	xcc -w -std=c++11 -c ../arduino/TMCStepper-master/src/source/spi_master.c -O2 -target=XU316-1024-QF60A-C24 -o spi.o
+spi.o: 
+	xcc -w -c ../arduino/TMCStepper-master/src/source/spi_master.c -O2 -target=XU316-1024-QF60A-C24 -o spi.o
+
+# spi.o: 
+# 	gcc -c ../arduino/TMCStepper-master/src/source/spi_master.c -o spi.o
+
 
 SW_MODE.o:
 	xcc -w -std=c++11 -c ../arduino/TMCStepper-master/src/source/SW_MODE.cpp -O2 -target=XU316-1024-QF60A-C24 -o SW_MODE.o
