@@ -7,22 +7,40 @@ function Convert-WindowsPathToWSLPath {
         [Parameter(Mandatory = $true)]
         [string]$WindowsPath
     )
-
     # Convert drive part to /mnt/<lowercase drive letter>/
-
     $lowercaseChar = $WindowsPath[0].toString()
     $lowercaseChar = $lowercaseChar.ToLower()
     $WSLPath = $lowercaseChar + $WindowsPath.Substring(1)
-
     $WSLPath = $WSLPath -replace '^([A-Z]):\\', '/mnt/$1/'
-
     # Convert backslashes to forward slashes
     $WSLPath = $WSLPath -replace '\\', '/'
     # Add \ before any spaces
     $WSLPath = $WSLPath -replace ' ', '\ '
-
     return $WSLPath
 }
+
+# Add UDEV rules
+$wslPath = Convert-WindowsPathToWSLPath -WindowsPath $PWD.Path
+$udevPath = "/etc/udev/rules.d"
+
+$udevContents = wsl ls $udevPath
+if ($udevContents -match "99-xmos.rules") {
+    
+} else {
+    wsl sudo cp "$wslPath/scripts/99-xmos.rules" $udevPath 
+    wsl sudo service udev reload
+}
+
+# $tempPath = "/tmp/scripts"
+# wsl mkdir $tempPath
+# wsl cp "$wslPath\setup_xmos_devices.sh" $tempPath
+# wsl cp "$wslPath\check_xmos_devices.sh" $tempPath
+# wsl chmod +x $tempPath/setup_xmos_devices.sh
+# wsl chmod +x $tempPath/check_xmos_devices.sh
+# wsl sudo -e $tempPath/setup_xmos_devices.sh
+# wsl sudo -e $tempPath/check_xmos_devices.sh
+
+# wsl sudo rm $tempPath -r -f
 
 # Run the `usbipd wsl list` command and capture its output
 $usbipdOutput = usbipd wsl list
@@ -39,20 +57,4 @@ foreach ($busid in $busids) {
     usbipd wsl attach --busid $busid
 }
 
-# Add UDEV rules
-$wslPath = Convert-WindowsPathToWSLPath -WindowsPath $PWD.Path
-$udevPath = "/etc/udev/rules.d"
 
-wsl sudo cp "$wslPath/scripts/99-xmos.rules" $udevPath 
-wsl sudo service udev reload
-
-# $tempPath = "/tmp/scripts"
-# wsl mkdir $tempPath
-# wsl cp "$wslPath\setup_xmos_devices.sh" $tempPath
-# wsl cp "$wslPath\check_xmos_devices.sh" $tempPath
-# wsl chmod +x $tempPath/setup_xmos_devices.sh
-# wsl chmod +x $tempPath/check_xmos_devices.sh
-# wsl sudo -e $tempPath/setup_xmos_devices.sh
-# wsl sudo -e $tempPath/check_xmos_devices.sh
-
-# wsl sudo rm $tempPath -r -f

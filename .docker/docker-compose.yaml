@@ -10,6 +10,7 @@ services:
       - shared_data:/home/shared
     devices:
       - /dev/bus/usb:/dev/bus/usb
+    privileged: true
     stdin_open: true
     tty: true
   gtkwave:
