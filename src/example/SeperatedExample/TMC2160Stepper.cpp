@@ -1,6 +1,5 @@
 #include "TMCStepper.h"
 #include "TMC_MACROS.h"
-#include "spi.h"
 
 // TMC2160Stepper::TMC2160Stepper(uint16_t pinCS, float RS, int8_t link) : TMC2130Stepper(pinCS, RS, link)
 //   { defaults(); }

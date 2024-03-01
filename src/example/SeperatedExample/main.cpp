@@ -14,7 +14,6 @@
 //#include "../arduino/TMCStepper-master/src/source/spi.h"
 
 #include "TMCStepper.h"
-#include "spi.h"
 
 
 #define WRIST_ROTATION_CURRENT 2000

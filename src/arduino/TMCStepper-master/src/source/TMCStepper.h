@@ -10,7 +10,9 @@
 #include "TMC2209_bitfields.h"
 #include "TMC2660_bitfields.h"
 
+extern "C" {
 #include "spi.h"
+}
 // #include <stdlib.h> /* for size_t */
 // #include <stdint.h>
 // #include <xclib.h> /* for byterev() */

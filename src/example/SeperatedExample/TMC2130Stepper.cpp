@@ -2,7 +2,7 @@
 #include "TMC_MACROS.h"
 #include <cstdint>
 #include <iostream>
-#include "spi.h"
+
 
 float RS = 0.11;
 

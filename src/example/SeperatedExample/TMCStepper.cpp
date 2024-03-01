@@ -1,6 +1,6 @@
 #include "TMCStepper.h"
 #include "TMC_MACROS.h"
-#include "spi.h"
+
 
 /*
   Requested current = mA = I_rms/1000

@@ -1,8 +1,8 @@
+
 // Copyright 2021-2022 XMOS LIMITED.
 // This Software is subject to the terms of the XMOS Public Licence: Version 1.
 #pragma once
 
-extern "C" {
 
 /** \file
  *  \brief API for SPI I/O
@@ -386,4 +386,3 @@ void spi_slave(
         uint32_t thread_mode);
 
 /**@}*/ // END: addtogroup hil_spi_slave
-}

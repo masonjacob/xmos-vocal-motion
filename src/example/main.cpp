@@ -10,12 +10,12 @@
 
 
 
-#include "../arduino/TMCStepper-master/src/source/TMCStepper.h"
+#include "../TMCStepper-master/src/source/TMCStepper.h"
 //#include "../arduino/TMCStepper-master/src/source/spi.h"
 
-
+extern "C" {
 #include "../arduino/TMCStepper-master/src/source/spi.h"
-
+}
 
 #define WRIST_ROTATION_CURRENT 2000
 
