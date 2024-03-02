@@ -10,5 +10,6 @@
                 "ms-vscode.makefile-tools"
             ]
         }
-    }
+    },
+    "overrideCommand": false
 }

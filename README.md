@@ -60,7 +60,7 @@ winget install --interactive --exact dorssel.usbipd-win
 2. Open a new WSL2 Terminal window and run the following:
 ```
 sudo apt install linux-tools-generic hwdata
-sudo update-alternatives --install /usr/local/bin/usbip usbip /usr/lib/linux-tools/*-generic/usbip 20
+sudo update-alternatives --install /usr/local/bin/usbip usbip $(command -v ls /usr/lib/linux-tools/*/usbip | tail -n1) 20
 ```
 
 3. Connect the XTAG to the computer using the provided USB cable. 
