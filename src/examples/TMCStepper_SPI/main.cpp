@@ -20,7 +20,7 @@
 
 
 port_t p_miso  = XS1_PORT_1P;
-port_t p_ss = XS1_PORT_1A;
+port_t p_ss = XS1_PORT_1A; //Active Low
 port_t p_sclk = XS1_PORT_1C;
 port_t p_mosi = XS1_PORT_1D;
 xclock_t cb = XS1_CLKBLK_1;
@@ -31,6 +31,7 @@ xclock_t cb = XS1_CLKBLK_1;
 //
 void setup_driver(TMC5160Stepper* driver, int current) {
     driver->begin();
+    std::cout << "Setup check 1" << std::endl;
     driver->toff(4); //off time
     driver->microsteps(16); //16 microsteps
     driver->rms_current(current); //400mA RMS
@@ -54,23 +55,26 @@ int main() {
 
     spi_master_device_t spi_dev_0;
 
-    spi_master_device_init(&spi_dev_0, &spi_ctx,
-        0,
-        0, 0,
-        spi_master_source_clock_xcore,
-        0,
-        spi_master_sample_delay_0,
-        0, 0 ,0 ,0 );
 
-    spi_master_start_transaction(&spi_dev_0);
+    
 
-    spi_master_delay_before_next_transfer(&spi_dev_0, 0);
+    // spi_master_device_init(&spi_dev_0, &spi_ctx,
+    //     0,
+    //     0, 0,
+    //     spi_master_source_clock_xcore,
+    //     12.5, //this is a 32 bit unsigned so 12.5 is no good. clock block 100MHZ so (100MHZ) / (4 * 12.5) = 2MHz which is the driver's clock speed
+    //     spi_master_sample_delay_0,
+    //     0, 0 ,0 ,0 );
+
+    // spi_master_start_transaction(&spi_dev_0);
+
+    // spi_master_delay_before_next_transfer(&spi_dev_0, 0);
 
     TMC5160Stepper* driver = new TMC5160Stepper(&spi_dev_0, &spi_ctx,
         0,
         0, 0,  //cpol, cpha
         spi_master_source_clock_xcore,
-        0,
+        12, //this is a 32 bit unsigned so 12.5 is no good. clock block 100MHZ so (100MHZ) / (4 * 12.5) = 2MHz which is the driver's clock speed
         spi_master_sample_delay_0,
         0, 0 ,0 ,0);
 

@@ -103,7 +103,6 @@ void TMC2130Stepper::defaults() {
 
 // __attribute__((weak))
 void TMC2130Stepper::beginTransaction() {
-  std::cout << dev << std::endl;
   spi_master_start_transaction(dev);
 }
 
