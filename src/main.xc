@@ -10,19 +10,19 @@
 #include <timer.h>
 #include <stdio.h>
 
-port p = XS1_PORT_4F ;
-
-// int main(void) {
-//   while (1) {
-//     p <: 10;
-//     delay_milliseconds(200);
-//     p <: 0;
-//     delay_milliseconds(200);
-//   }
-//   return 0;
-// }
+port p = XS1_PORT_4F;
 
 int main(void) {
-  printf("Hello world!\n");
+  while (1) {
+    p <: 14;
+    delay_milliseconds(200);
+    p <: 0;
+    delay_milliseconds(200);
+  }
   return 0;
 }
+
+// int main(void) {
+//   printf("Hello world!\n");
+//   return 0;
+// }

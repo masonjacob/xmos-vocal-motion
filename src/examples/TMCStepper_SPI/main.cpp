@@ -24,6 +24,7 @@ port_t p_ss = XS1_PORT_1A;
 port_t p_sclk = XS1_PORT_1C;
 port_t p_mosi = XS1_PORT_1D;
 xclock_t cb = XS1_CLKBLK_1;
+port_t led = XS1_PORT_4F;
 
 //"XS1_PORT_1D"  Name="PORT_SPI_MOSI"/>
 //<Port Location="XS1_PORT_1P"  Name="PORT_SPI_MISO"/>
@@ -54,40 +55,66 @@ int main() {
 
     spi_master_device_t spi_dev_0;
 
-    spi_master_device_init(&spi_dev_0, &spi_ctx,
-        0,
-        0, 0,
-        spi_master_source_clock_xcore,
-        0,
-        spi_master_sample_delay_0,
-        0, 0 ,0 ,0 );
+    // spi_master_device_init(&spi_dev_0, &spi_ctx,
+    //     0,
+    //     0, 0,
+    //     spi_master_source_clock_xcore,
+    //     75,
+    //     spi_master_sample_delay_0,
+    //     0, 0 ,0 ,0 );
 
-    spi_master_start_transaction(&spi_dev_0);
+    // spi_master_start_transaction(&spi_dev_0);
 
-    spi_master_delay_before_next_transfer(&spi_dev_0, 0);
+    // spi_master_delay_before_next_transfer(&spi_dev_0, 0);
+
+    // spi_master_transfer(&spi_dev_0, (uint8_t*)0x05, (uint8_t*)0x00, 1);
 
     TMC5160Stepper* driver = new TMC5160Stepper(&spi_dev_0, &spi_ctx,
         0,
         0, 0,  //cpol, cpha
         spi_master_source_clock_xcore,
-        0,
+        75,
         spi_master_sample_delay_0,
         0, 0 ,0 ,0);
 
     setup_driver(driver, WRIST_ROTATION_CURRENT);
-
-    auto xactual = driver->XACTUAL();
-    auto xtarget = driver->XTARGET();
-
-    while(1)
-    {
-    delay_microseconds(1000);
     
-    std::cout << "xactual" << xactual << std::endl;
-    std::cout << "xtarget" << xtarget << std::endl;
+    port_enable(led);
+
+    while(1) {
+        auto xactual = driver->XACTUAL();
+        auto xtarget = driver->XTARGET();
+
+        std::cout<<"ioin="<<driver->IOIN()<<" xactual="<<xactual<<"\n";
+
+        if (xactual == xtarget) 
+            {
+            driver->XTARGET(-xactual);
+            }
+        port_out(led, 0b1100);
+        delay_milliseconds(100);
+        port_out(led, 0b0000);
+        delay_milliseconds(100);
     }
 
+    ////////////////////////////////////////
+    //// WORKING BASIC I/O TEST         ////
+    ////////////////////////////////////////
 
+    // port_enable(p_miso);
+    // port_enable(led);
+
+    // while(1) {
+    //     port_out(p_miso, 1);
+    //     port_out(led, 0b1100);
+    //     delay_milliseconds(1000);
+    //     port_out(p_miso, 0);
+    //     port_out(led, 0b0000);
+    //     delay_milliseconds(1000);
+    // }
+
+    // port_disable(p_miso);
+    // port_disable(led);
 
 }
 

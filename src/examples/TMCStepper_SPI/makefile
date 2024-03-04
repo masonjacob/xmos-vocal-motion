@@ -24,7 +24,7 @@
 # TO DO: FIGURE OUT HOW TO BUILD WITH TWO C FILES (SPI_SLAVE)
 
 spi.o:
-	xcc spi_master.c -c -O2 -target=XU316-1024-QF60A-C24 -w -o spi.o
+	xcc spi_master.c -c -O2 XK_VOICE_L71.xn -w -o spi.o
 
 # spi.o: 
 # 	gcc -c spi_master.c -o spi.o
@@ -33,7 +33,7 @@ spi.o:
 # 	xcc -w -std=c++11 -c SW_MODE.cpp -O2 -target=XU316-1024-QF60A-C24 -o SW_MODE.o
 
 main.xe: spi.o
-	xcc -w -std=c++14 spi.o *.cpp -O2 -target=XU316-1024-QF60A-C24 -o main.xe
+	xcc -w -std=c++14 spi.o *.cpp XK_VOICE_L71.xn -O2 -o main.xe
 
 TMCStepper.o: spi.o TMCStepper.h TMC_MACROS.h TMC2130_bitfields.h TMC2160_bitfields.h TMC5130_bitfields.h TMC5160_bitfields.h
 	xcc -w -std=c++14 -c CHOPCONF.cpp COOLCONF.cpp DRV_CONF.cpp DRV_STATUS.cpp DRVCONF.cpp DRVCTRL.cpp DRVSTATUS.cpp ENCMODE.cpp GCONF.cpp IHOLD_IRUN.cpp PWMCONF.cpp RAMP_STAT.cpp SGCSCONF.cpp SHORT_CONF.cpp SMARTEN.cpp TMCStepper.cpp TMC2130Stepper.cpp TMC2160Stepper.cpp TMC5130Stepper.cpp TMC5160Stepper.cpp spi.o -O2 -target=XU316-1024-QF60A-C24 -o TMCStepper.o
